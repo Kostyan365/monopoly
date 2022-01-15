@@ -2,9 +2,12 @@ import pygame
 import os
 import sys
 import ctypes
-
+import random
+list_sound=['brosok-igralnyih-kostey','brosok-igralnyih-kostey-25740','igralnaya-kost-upala','katyatsya-po-stolu',
+            'kubiki-razletelis','odin-kubik-brosili-na-stol','zvuk-brosaniya-igralnyih-kostey-2-25771']
 user32 = ctypes.windll.user32
 user32.SetProcessDPIAware()
+pygame.mixer.pre_init(44100, -16, 1, 512)  # важно прописать до pygame.init()
 pygame.init()  # Инициализация конструктора
 res = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))  # разрешение экрана
 pygame.display.set_caption('Monopoly')
@@ -41,7 +44,10 @@ def load_img(name, colorkey=None):
         image = image.convert_alpha()
     return image
 
+
 player_image = load_img('mario.png')
+
+
 def terminate():
     """Функция выхода"""
     pygame.quit()
@@ -87,12 +93,18 @@ tile_images = {
     'z': load_img('kazna1.jpg'),
     'x': load_img('kazna2.jpg')
 }
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
-        print(pos_x, pos_y)
-        self.rect = self.image.get_rect().move(tile_width * pos_x+(width / 2 - 455), tile_height * pos_y+100)
+        self.rect = self.image.get_rect().move(tile_width * pos_x + (width / 2 - 455), tile_height * pos_y + 100)
+
+
+class Cards:
+    def __init__(self, **kwargs):
+        pass
 
 
 class Player(pygame.sprite.Sprite):
@@ -119,15 +131,6 @@ def generate_level(level):
                 Tile(level[y][x], x, y)
     # вернем игрока, а также размер поля в клетках
     return new_player, x, y
-
-
-
-
-
-
-
-
-
 
 
 def start_screen():
@@ -192,6 +195,13 @@ player, max_x, max_y = generate_level(level_map)
 print(player)
 
 
+def dice():
+
+    z=random.choice(list_sound)
+
+    s_catch = pygame.mixer.Sound(f'sound/{z}.ogg')
+    s_catch.play()
+
 class Board:
     # создание поля
     def __init__(self, width, height):
@@ -239,9 +249,8 @@ class Board:
     def on_click(self, ceil):
         print(ceil)
 
+dice()
 fon = pygame.transform.scale(load_img('fon2.jpg'), (width, height))
-
-
 
 board = Board(13, 13)
 board.set_view(width / 2 - 455, 100, 70)
@@ -260,6 +269,7 @@ while running:
 
     tiles_group.draw(screen)
     board.render(screen)
+    Tile('q', 11, 1)
     pygame.display.flip()
 
 pygame.quit()

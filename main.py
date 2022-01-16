@@ -3,6 +3,7 @@ import os
 import sys
 import ctypes
 import random
+import sqlite3
 list_sound=['brosok-igralnyih-kostey','brosok-igralnyih-kostey-25740','igralnaya-kost-upala','katyatsya-po-stolu',
             'kubiki-razletelis','odin-kubik-brosili-na-stol','zvuk-brosaniya-igralnyih-kostey-2-25771']
 user32 = ctypes.windll.user32
@@ -65,34 +66,34 @@ def load_level(filename):
     return list(map(lambda x: x.ljust(max_width, '.'), level_map))
 
 
-tile_images = {
+"""tile_images = {
     '#': load_img('atlas.jpg'),
     '.': load_img('grass.png'),
-    'q': load_img('start1.jpg'),
-    'w': load_img('start2.jpg'),
-    'e': load_img('start3.jpg'),
-    'r': load_img('start4.jpg'),
-    't': load_img('prisoner1.jpg'),
-    'y': load_img('prisoner2.jpg'),
-    'u': load_img('prisoner3.jpg'),
-    'i': load_img('prisoner4.jpg'),
+    'q': load_img('1/start1.jpg'),
+    'w': load_img('1/start2.jpg'),
+    'e': load_img('1/start3.jpg'),
+    'r': load_img('1/start4.jpg'),
+    't': load_img('11/prisoner1.jpg'),
+    'y': load_img('11/prisoner2.jpg'),
+    'u': load_img('11/prisoner3.jpg'),
+    'i': load_img('11/prisoner4.jpg'),
 
     'o': load_img('parking1.jpg'),
     'p': load_img('parking2.jpg'),
     'a': load_img('parking3.jpg'),
     's': load_img('parking4.jpg'),
 
-    'd': load_img('arest1.jpg'),
-    'f': load_img('arest2.jpg'),
-    'g': load_img('arest3.jpg'),
-    'h': load_img('arest4.jpg'),
-    'j': load_img('shans1.jpg'),
-    'k': load_img('shans2.jpg'),
+    'd': load_img('31/arest1.jpg'),
+    'f': load_img('31/arest2.jpg'),
+    'g': load_img('31/arest3.jpg'),
+    'h': load_img('31/arest4.jpg'),
+    'j': load_img('8/shans1.jpg'),
+    'k': load_img('8/shans2.jpg'),
     'l': load_img('shans3.jpg'),
     ';': load_img('shans4.jpg'),
-    'z': load_img('kazna1.jpg'),
-    'x': load_img('kazna2.jpg')
-}
+    'z': load_img('3\kazna1.jpg'),
+    'x': load_img('3\kazna2.jpg')
+}"""
 
 
 class Tile(pygame.sprite.Sprite):
@@ -101,10 +102,18 @@ class Tile(pygame.sprite.Sprite):
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x + (width / 2 - 455), tile_height * pos_y + 100)
 
+conn = sqlite3.connect('data/database/cards.db')
+cur = conn.execute("SELECT * FROM tale")
+z = cur.fetchall()
+conn.close()
+
 
 class Cards:
     def __init__(self, **kwargs):
         pass
+
+for _ in z:
+    print(_)
 
 
 class Player(pygame.sprite.Sprite):

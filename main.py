@@ -1,5 +1,3 @@
-import time
-
 import pygame
 import os
 import sys
@@ -7,6 +5,7 @@ import ctypes
 import random
 import sqlite3
 from collections import deque
+
 list_sound = ['brosok-igralnyih-kostey', 'brosok-igralnyih-kostey-25740', 'igralnaya-kost-upala', 'katyatsya-po-stolu',
               'kubiki-razletelis', 'odin-kubik-brosili-na-stol', 'zvuk-brosaniya-igralnyih-kostey-2-25771']
 user32 = ctypes.windll.user32
@@ -14,12 +13,16 @@ user32.SetProcessDPIAware()
 pygame.mixer.pre_init(44100, -16, 1, 512)  # важно прописать до pygame.init()
 pygame.init()  # Инициализация конструктора
 res = (user32.GetSystemMetrics(0), user32.GetSystemMetrics(1))  # разрешение экрана
+res = (res[0], res[1] - 50)
 pygame.display.set_caption('Monopoly')
-screen = pygame.display.set_mode(res)  # открывает окно
+pygame.display.set_icon(pygame.image.load('data/icons.png'))
+
+screen = pygame.display.set_mode(res, pygame.FULLSCREEN)  # формируем окно приложения
 width = screen.get_width()  # ширина экрана
 height = screen.get_height()  # высота экрана
 clock = pygame.time.Clock()
 FPS = 15
+
 # основной персонаж
 pl1 = ['player1/player1_1.png', 'player1/player1_2.png', 'player1/player1_3.png', 'player1/player1_4.png',
        'player1/player1_5.png', 'player1/player1_6.png']
@@ -108,6 +111,68 @@ class Player(pygame.sprite.Sprite):
                                                tile_height * self.pos[1] + 105)
 
 
+class Info_window(pygame.Surface):
+    def __init__(self, ):
+        super().__init__((250, 570))
+        self.fon = pygame.transform.scale(load_img('fon.jpg'), (width, height))
+        self.blit(self.fon, (0, 0))
+
+    def reader(self, *args):
+        print(type(args[0]))
+        data = args[0]
+
+        if data==False:
+            self.blit(self.fon, (0, 0))
+        elif data.type_card == 6:
+            text = [data.name.upper(), "",
+                    "Право собственности",
+                    f"РЕНТА БЕЗ СТРОЕНИЙ                       {data.renta1} $",
+                    f"-1 дом                                                     {data.renta2} $",
+                    f"-2 дома                                                 {data.renta3} $",
+                    f"-3 дома                                                {data.renta4} $",
+                    f"-4 дома                                                {data.renta5} $",
+                    f"РЕНТА С ОТЕЛЕМ                              {data.renta6} $",
+                    "--------------------------------------------",
+                    "Если игроку принадлежит все",
+                    "имущество одной цветовой группы,",
+                    "рента удваивается",
+                    "--------------------------------------------",
+                    f"Постройка дома                              {data.house} $",
+                    f"Постройка отеля                             {data.hotel} $",
+                    f"                                                        + 4 дома",
+                    f"Залог                                                    {data.zalog} $",]
+            self.funct(text,data.id,(185, 15))
+
+        elif data.type_card == 1:
+            text = [data.name.upper(), "",
+                    "Вы пересекли ",
+                    "сектор СТАРТ,",
+                    "--------------------------------------------",
+                    "банк вам выплачивает",
+                    "- 200 $"]
+            self.funct(text,data.id,(55, 270))
+
+    def funct(self,text,id,cords):
+        font = pygame.font.Font('data/font/Akrobat-ExtraBold.otf', 16)
+        text_coord = 5
+        for line in text:
+            string_rendered = font.render(line, True, pygame.Color('white'))
+            intro_rect = string_rendered.get_rect()
+            text_coord += 10
+            intro_rect.top = text_coord
+            intro_rect.x = 10
+            text_coord += intro_rect.height
+            self.blit(string_rendered, intro_rect)
+        self.image = load_img(f'icon/img{id}.jpg')
+        self.blit(self.image, cords)
+        pygame.display.update()
+
+
+
+
+info_window = Info_window()
+
+
 def generate_level():
     conn = sqlite3.connect('data/database/cards.db')
     cur = conn.execute("SELECT * FROM tale")
@@ -175,120 +240,109 @@ def start_screen():
         pygame.display.flip()
         clock.tick(FPS)
 
+
 def generate_player(data):
     images = [load_img(i) for i in data]
     return images
 
 
-def dice():
-    z = random.choice(list_sound)
-    s_catch = pygame.mixer.Sound(f'sound/{z}.ogg')
-    s_catch.play()
+class Dice:
+    def __init__(self):
+        self.s_catch = pygame.mixer.Sound(f'sound/{random.choice(list_sound)}.ogg')
+        self.dice1 = random.randrange(1, 7)
+        self.dice2 = random.randrange(1, 7)
+
+    def play(self):
+        self.s_catch.play()
+        return self.dice1 + self.dice2
 
 
-
-
-
-
-
-
-
-"""class Board:
-    # создание поля
-    def __init__(self, width, height):
-        self.width = width
-        self.height = height
-
-        # значения по умолчанию
-        self.left = 10
-        self.top = 10
-        self.cell_size = 30
-
-    # настройка внешнего вида
-    def set_view(self, left, top, cell_size):
-        self.left = left
-        self.top = top
-        self.cell_size = cell_size
-
-    def render(self, screen):
-
-        x1 = width / 2 - 315
-        y1 = 240
-        pygame.draw.rect(screen, (255, 0, 0), (width / 2 - 455, 100, 910, 910), 2)
-        pygame.draw.rect(screen, (255, 0, 0), (width / 2 - 315, 240, 630, 630), 2)
-        for i in range(10):
-            pygame.draw.line(screen, (255, 0, 0), [x1, 100], [x1, 240], 2)
-            pygame.draw.line(screen, (255, 0, 0), [x1, 870], [x1, 1010], 2)
-            x1 += 70
-            pygame.draw.line(screen, (255, 0, 0), [width / 2 - 455, y1], [width / 2 - 315, y1], 2)
-            pygame.draw.line(screen, (255, 0, 0), [width / 2 + 315, y1], [width / 2 + 455, y1], 2)
-            y1 += 70
-
-            # pygame.draw.rect(screen, (255, 255, 255), (coord_x, coord_y, self.cell_size, self.cell_size), 1)
-
-    def get_click(self, mouse_pos):
-        cell = self.get_cell(mouse_pos)
-        self.on_click(cell)
-
-    def get_cell(self, mouse_pos):
-        ceil_x = (mouse_pos[0] - self.left) // self.cell_size
-        ceil_y = (mouse_pos[1] - self.top) // self.cell_size
-        if 0 <= ceil_x < self.width and 0 <= ceil_y < self.height:
-            return ceil_x, ceil_y
-        return None
-    def on_click(self, ceil):
-        print(ceil)"""
 start_screen()
 generate_level()
 player1 = Player(11, 11, generate_player(pl1))
-player2 = Player(11, 12,generate_player(pl2))
+player2 = Player(11, 12, generate_player(pl2))
 print(player1.pos)
 print(player2.pos)
-
-
-
-
-
-
-
-
-rand = 6
+info_window.reader(list_card[0])
 d = deque(list(range(0, 40)))
-
-dice()
 fon = pygame.transform.scale(load_img('fon2.jpg'), (width, height))
-# board = Board(13, 13)
-# board.set_view(width / 2 - 455, 100, 70)
+
 # движение персонажа
+# левая белая поверхность,
+# равная половине окна
+surf_left = pygame.Surface(
+    (width // 2, height))
+surf_left.fill("white")
 
+# правая черная поверхность,
+# равная другой половине окна
+surf_right = pygame.Surface(
+    (width // 2, height))
 
-
+# размещаем поверхности на главной,
+# указывая координаты
+# их верхних левых углов
+screen.blit(surf_left, (0, 0))
+screen.blit(surf_right, (width // 2, 0))
+dt = 0
+timer = 0
 running = True
 while running:
     mouse = pygame.mouse.get_pos()
-    for event in pygame.event.get():
+    for event in pygame.event.get():  # обращаемся к очереди событий, где event-событие из очереди(итерируемый объект)
         if event.type == pygame.QUIT:
             running = False
+
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
+                _=Dice().play()
+                info_window.reader(False)
+                for i in range(_):
 
-                for i in range(6):
                     z = d.popleft()
                     _index = d[0]
-                    print(list_card[_index].coords[0])
+
+                    # print(list_card[_index].coords[0])
                     x, y = list_card[_index].coords[0]
                     player1.move(x, y)
+                    clock.tick(5)
+                    tiles_group.draw(screen)
+                    player_group.update()
+                    player_group.draw(screen)
+                    pygame.display.flip()
                     d.append(z)
-        # if event.type == pygame.MOUSEBUTTONDOWN:
-        # board.get_click(event.pos)
+                    if _==i+1:
+                        info_window.reader(list_card[_index])
+
         if width / 2 - 100 <= mouse[0] <= width / 2 + 100 and height / 1.5 + 60 <= mouse[1] <= height / 1.5 + 60 + 40:
             terminate()  # Если мышь нажала на кнопку игра прекращена
-    screen.blit(fon, (0, 0))
-    # screen.fill(pygame.Color("black"))
+
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if event.button == 1:
+                if timer == 0:  # First mouse click.
+                    timer = 0.001  # Start the timer.
+                # Нажмите еще раз до 0,5 секунды, чтобы дважды щелкнуть.
+                elif timer < 0.1:
+                    print('double click')
+                    pygame.display.iconify()
+                    timer = 0
+    # Увеличение таймера после того, как мышь нажал первый раз.
+    if timer != 0:
+        timer += dt
+        # Сброс через 0,5 секунды.
+        if timer >= 0.1:
+            timer = 0
+
+        # dt == time in seconds since last tick.
+        # / 1000 to convert milliseconds to seconds.
+    dt = clock.tick(30) / 1000
+
+    # screen.blit(fon, (0, 0))
     tiles_group.draw(screen)
     player_group.update()
     player_group.draw(screen)
-    # board.render(screen)
+    surf_left.fill("white")
+    screen.blit(info_window, (50, 50))
     clock.tick(FPS)
     pygame.display.flip()
 pygame.quit()

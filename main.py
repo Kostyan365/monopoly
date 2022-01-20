@@ -1,3 +1,5 @@
+import time
+
 import pygame
 import os
 import sys
@@ -33,6 +35,7 @@ list_card = []
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
+money_group=pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 tile_width = 70
 tile_height = 70
@@ -283,25 +286,6 @@ class InfoWindow(pygame.Surface):
         pygame.display.update()
 
 
-class GameField:
-    # движение персонажа
-    # левая белая поверхность,
-    # равная половине окна
-    surf_left = pygame.Surface((WIDTH // 2, HEIGHT))
-    surf_left.fill("white")
-
-    # правая черная поверхность,
-    # равная другой половине окна
-    surf_right = pygame.Surface(
-        (WIDTH // 2, HEIGHT))
-
-    # размещаем поверхности на главной,
-    # указывая координаты
-    # их верхних левых углов
-
-    screen.blit(surf_left, (0, 0))
-    screen.blit(surf_right, (WIDTH // 2, 0))
-    surf_left.fill("white")
 
 
 class Button:
@@ -319,29 +303,107 @@ class Button:
         self.down = cord_rect[1] + cord_rect[3]
 
     def update(self):
-        pygame.draw.rect(screen, self.color_dark, self.cord_rect,border_radius=5)
+        pygame.draw.rect(screen, self.color_dark, self.cord_rect, border_radius=5)
         screen.blit(self.text_but, self.cord_text)
 
     def focus(self):
-        pygame.draw.rect(screen, self.color_light, self.cord_rect,border_radius=5)
+        pygame.draw.rect(screen, self.color_light, self.cord_rect, border_radius=5)
         screen.blit(self.text_but, self.cord_text)
 
 
 # ---------------------------------------------------------------
 class Dice:
     def __init__(self):
-        self.s_catch = pygame.mixer.Sound(f'sound/{random.choice(list_sound)}.ogg')
-        self.dice1 = random.randrange(1, 7)
-        self.dice2 = random.randrange(1, 7)
         self.color_light = (170, 170, 170)  # светлый оттенок кнопки
-        self.update = pygame.draw.rect(screen, self.color_light, (WIDTH/2-65,240,130,570), border_radius=5)
-    def gen_lev(self):
-        for i in range(2):
-            for j in range()
+        self.surf_dice = pygame.Surface((130, 570))
+        self.surf_dice.fill("white")
+        screen.blit(self.surf_dice, (WIDTH / 2 - 65, 240))
+        # pygame.display.flip()
 
     def play(self):
-        self.s_catch.play()
-        return self.dice1 + self.dice2
+
+        dice1 = random.randrange(1, 7)  # Значение кости1
+        dice2 = random.randrange(1, 7)  # Значение кости2
+
+        dice1_path = random.randrange(1, 9)  # Путь кости1
+        dice2_path = random.randrange(1, 9)  # Путь кости2
+        coords_1 = 570
+        coords_2 = 570
+        rang = dice1_path
+        if dice2_path > dice1_path:
+            rang = dice2_path
+        flag1 = False
+        flag2 = False
+        temp = [0, 0]
+
+        for i in range(1, rang):
+            self.surf_dice.fill("white")  # Очищаем сурф
+            if i >= dice1_path - 1:
+                if not flag1:
+                    temp[0] = coords_1
+                    flag1 = True
+                    dice_img = load_img(f"dice/dice{dice1}.png")
+                dice_rect = dice_img.get_rect(bottomleft=(0, temp[0]))
+                self.surf_dice.blit(dice_img, dice_rect)
+            else:
+                dice_img = load_img(f"dice/dice{random.randrange(1, 7)}.png")
+                dice_rect = dice_img.get_rect(bottomleft=(0, coords_1))
+                self.surf_dice.blit(dice_img, dice_rect)
+
+            if i >= dice2_path - 1:
+                if not flag2:
+                    temp[1] = coords_2
+                    dice_img2 = load_img(f"dice/dice{dice2}.png")
+                    flag2 = True
+                dice_rect2 = dice_img2.get_rect(bottomright=(130, temp[1]))
+                self.surf_dice.blit(dice_img2, dice_rect2)
+            else:
+                dice_img2 = load_img(f"dice/dice{random.randrange(1, 7)}.png")
+                dice_rect2 = dice_img2.get_rect(bottomright=(130, coords_2))
+                self.surf_dice.blit(dice_img2, dice_rect2)
+
+            screen.blit(self.surf_dice, (WIDTH / 2 - 65, 240))
+            pygame.display.flip()
+            s_catch = pygame.mixer.Sound(f'sound/{random.choice(list_sound)}.ogg')
+            s_catch.play()
+            pygame.time.wait(200)
+            coords_1 -= 65
+            coords_2 -= 65
+        return dice1 + dice2
+
+
+class Money(pygame.Surface):
+    def __init__(self, data, pos_x, pos_y):
+        super().__init__((120, 230))
+        print (data, pos_x, pos_y)
+        self.nominal=data[0]
+        self.quantity = data[1]
+        self.image = load_img(f'money/{data[2]}')
+        self.rect = self.image.get_rect(topleft=(pos_x, pos_y))#получаем ссылку на размеры этой области в виде экземпляра класса Rect
+
+
+nominal = [[1,5,"img1.bmp"],[5,1,"img2.bmp"],[10,2,"img3.bmp"],[20,1,"img4.bmp"],
+           [50,1,"img5.bmp"], [100,4,"img6.bmp"], [500,2,"img7.bmp"], [1000,0,"img8.bmp"]]
+wallet1=[]
+
+def gen_money():
+    money_box1=pygame.Surface((400,1000))
+    screen.blit(money_box1, (WIDTH / 2 - 900, 0))
+    tmp = 0
+    x=WIDTH//2+455
+    y=0
+    for i in range(2):
+        for j in range(4):
+            z=Money(nominal[tmp],x,y)
+            z.scroll(x,y)
+            screen.blit(z.image,z.rect)
+            wallet1.append(z)
+            tmp += 1
+            x+=82
+        x=WIDTH//2+455
+        y+=230
+
+
 
 
 # ---------------------------------------------------------------
@@ -427,13 +489,15 @@ generate_level()  # Генерируем игровое поле
 player1 = Player(11, 11, generate_player(pl1))  # Создаем 1 игрока
 player2 = Player(11, 12, generate_player(pl2))  # Создаем 2 игрока
 d = deque(list(range(0, 40)))  # Очередь из карточек
-#fon = pygame.transform.scale(load_img('fon2.jpg'), (WIDTH, HEIGHT))
-but = Button("Ход", (WIDTH / 2 - 65, 810, 130, 60),45,18)
-but_exit= Button("Выход", (WIDTH / 2 + 315, 0, 140, 100),37,36)
-but_razmen1 =Button("Размен", (WIDTH / 2 - 190, 810, 125, 60),25,18)
-but_oplata1 =Button("Оплатить", (WIDTH / 2 - 315, 810, 125, 60),7,18)
-but_razmen2 =Button("Размен", (WIDTH / 2 + 65, 810, 125, 60),25,18)
-but_oplata2 =Button("Оплатить", (WIDTH / 2 + 190, 810, 125, 60),7,18)
+fon = pygame.transform.scale(load_img('fon2.jpg'), (WIDTH, HEIGHT))
+screen.blit(fon, (0, 0))
+but = Button("Ход", (WIDTH / 2 - 65, 810, 130, 60), 45, 18)
+but_exit = Button("Выход", (WIDTH / 2 + 315, 0, 140, 100), 37, 36)
+but_razmen1 = Button("Размен", (WIDTH / 2 - 190, 810, 125, 60), 25, 18)
+but_oplata1 = Button("Оплатить", (WIDTH / 2 - 315, 810, 125, 60), 7, 18)
+but_razmen2 = Button("Размен", (WIDTH / 2 + 65, 810, 125, 60), 25, 18)
+but_oplata2 = Button("Оплатить", (WIDTH / 2 + 190, 810, 125, 60), 7, 18)
+gen_money()
 dice = Dice()
 info_window = InfoWindow()
 info_window2 = InfoWindow()
@@ -461,6 +525,7 @@ while running:
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP:
                 _ = dice.play()
+
                 info_window.reader(False)
                 for i in range(_):
 
@@ -479,7 +544,6 @@ while running:
                     if _ == i + 1:
                         info_window.reader(list_card[_index])
 
-
     # Увеличение таймера после того, как мышь нажал первый раз.
     if timer != 0:
         timer += dt
@@ -488,12 +552,14 @@ while running:
             timer = 0
 
     dt = clock.tick(30) / 1000
-    #screen.blit(fon, (0, 0))
+
     tiles_group.draw(screen)
     player_group.update()
     player_group.draw(screen)
+    money_group.draw(screen)
     screen.blit(info_window, (WIDTH / 2 - 315, 240))
     screen.blit(info_window2, (WIDTH / 2 + 65, 240))
+
     if but.left <= mouse[0] <= but.right and but.up <= mouse[1] <= but.down:  # Кнопка ход
         but.focus()
     else:
@@ -502,22 +568,28 @@ while running:
         but_exit.focus()
     else:
         but_exit.update()
-    if but_razmen1.left <= mouse[0] <= but_razmen1.right and but_razmen1.up <= mouse[1] <= but_razmen1.down:  # Кнопка Pазмен1
+    if but_razmen1.left <= mouse[0] <= but_razmen1.right and but_razmen1.up <= mouse[
+        1] <= but_razmen1.down:  # Кнопка Pазмен1
         but_razmen1.focus()
     else:
         but_razmen1.update()
-    if but_oplata1.left <= mouse[0] <= but_oplata1.right and but_oplata1.up <= mouse[1] <= but_oplata1.down:  # Кнопка Оплата1
+    if but_oplata1.left <= mouse[0] <= but_oplata1.right and but_oplata1.up <= mouse[
+        1] <= but_oplata1.down:  # Кнопка Оплата1
         but_oplata1.focus()
     else:
         but_oplata1.update()
-    if but_razmen2.left <= mouse[0] <= but_razmen2.right and but_razmen2.up <= mouse[1] <= but_razmen2.down:  # Кнопка Pазмен2
+    if but_razmen2.left <= mouse[0] <= but_razmen2.right and but_razmen2.up <= mouse[
+        1] <= but_razmen2.down:  # Кнопка Pазмен2
         but_razmen2.focus()
     else:
         but_razmen2.update()
-    if but_oplata2.left <= mouse[0] <= but_oplata2.right and but_oplata2.up <= mouse[1] <= but_oplata2.down:  # Кнопка Оплата1
+    if but_oplata2.left <= mouse[0] <= but_oplata2.right and but_oplata2.up <= mouse[
+        1] <= but_oplata2.down:  # Кнопка Оплата1
         but_oplata2.focus()
     else:
         but_oplata2.update()
+
+
     clock.tick(FPS)
     pygame.display.flip()
 pygame.quit()

@@ -25,17 +25,23 @@ WIDTH = get_width  # ширина экрана
 HEIGHT = screen.get_height()  # высота экрана
 clock = pygame.time.Clock()
 FPS = 25
+nominal = [[0, 0, "kletochku.bmp"], [0, 0, "kletochku.bmp"], [0, 0, "kletochku.bmp"], [0, 0, "kletochku.bmp"],
+           [1, 5, "img1.bmp"], [5, 1, "img2.bmp"], [10, 2, "img3.bmp"], [20, 1, "img4.bmp"],
+           [50, 1, "img5.bmp"], [100, 4, "img6.bmp"], [500, 2, "img7.bmp"], [1000, 0, "img8.bmp"]]
+
 
 # основной персонаж
 pl1 = ['player1/player1_1.png', 'player1/player1_2.png', 'player1/player1_3.png', 'player1/player1_4.png',
        'player1/player1_5.png', 'player1/player1_6.png']
+wallet1 = []
 pl2 = ['player2/player2_1.png', 'player2/player2_2.png', 'player2/player2_3.png', 'player2/player2_4.png',
        'player2/player2_5.png', 'player2/player2_6.png']
+wallet2 = []
 list_card = []
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
-money_group=pygame.sprite.Group()
+money_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
 tile_width = 70
 tile_height = 70
@@ -286,8 +292,6 @@ class InfoWindow(pygame.Surface):
         pygame.display.update()
 
 
-
-
 class Button:
     def __init__(self, text, cord_rect, x=0, y=0):
         self.cord_rect = cord_rect
@@ -318,7 +322,6 @@ class Dice:
         self.surf_dice = pygame.Surface((130, 570))
         self.surf_dice.fill("white")
         screen.blit(self.surf_dice, (WIDTH / 2 - 65, 240))
-        # pygame.display.flip()
 
     def play(self):
 
@@ -372,38 +375,37 @@ class Dice:
         return dice1 + dice2
 
 
+# ---------------------------------------------------------------
 class Money(pygame.Surface):
     def __init__(self, data, pos_x, pos_y):
         super().__init__((120, 230))
-        print (data, pos_x, pos_y)
-        self.nominal=data[0]
+        print(data, pos_x, pos_y)
+        self.nominal = data[0]
         self.quantity = data[1]
         self.image = load_img(f'money/{data[2]}')
-        self.rect = self.image.get_rect(topleft=(pos_x, pos_y))#получаем ссылку на размеры этой области в виде экземпляра класса Rect
+        self.rect = self.image.get_rect(
+            topleft=(pos_x, pos_y))  # получаем ссылку на размеры этой области в виде экземпляра класса Rect
 
 
-nominal = [[1,5,"img1.bmp"],[5,1,"img2.bmp"],[10,2,"img3.bmp"],[20,1,"img4.bmp"],
-           [50,1,"img5.bmp"], [100,4,"img6.bmp"], [500,2,"img7.bmp"], [1000,0,"img8.bmp"]]
-wallet1=[]
-
-def gen_money():
-    money_box1=pygame.Surface((400,1000))
-    screen.blit(money_box1, (WIDTH / 2 - 900, 0))
+def gen_money(x, y, player):
     tmp = 0
-    x=WIDTH//2+455
-    y=0
-    for i in range(2):
+    for i in range(3):
         for j in range(4):
-            z=Money(nominal[tmp],x,y)
-            z.scroll(x,y)
-            screen.blit(z.image,z.rect)
-            wallet1.append(z)
+            z = Money(nominal[tmp], x, y)
+            z.scroll(x, y)
+            screen.blit(z.image, z.rect)
+            if player == 1:
+                wallet1.append(z)
+            if player == 2:
+                wallet2.append(z)
             tmp += 1
-            x+=82
-        x=WIDTH//2+455
-        y+=230
-
-
+            x += 82
+        if player == 1:
+            x = WIDTH // 2 - 455 - 328
+            y += 200
+        if player == 2:
+            x = WIDTH // 2 + 455
+            y += 200
 
 
 # ---------------------------------------------------------------
@@ -497,7 +499,8 @@ but_razmen1 = Button("Размен", (WIDTH / 2 - 190, 810, 125, 60), 25, 18)
 but_oplata1 = Button("Оплатить", (WIDTH / 2 - 315, 810, 125, 60), 7, 18)
 but_razmen2 = Button("Размен", (WIDTH / 2 + 65, 810, 125, 60), 25, 18)
 but_oplata2 = Button("Оплатить", (WIDTH / 2 + 190, 810, 125, 60), 7, 18)
-gen_money()
+gen_money(WIDTH // 2 - 455 - 328, HEIGHT - 600, 1)
+gen_money(WIDTH // 2 + 455, HEIGHT - 600, 2)
 dice = Dice()
 info_window = InfoWindow()
 info_window2 = InfoWindow()
@@ -588,7 +591,6 @@ while running:
         but_oplata2.focus()
     else:
         but_oplata2.update()
-
 
     clock.tick(FPS)
     pygame.display.flip()

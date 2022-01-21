@@ -34,10 +34,12 @@ nominal = [[0, 0, "kletochku.bmp"], [0, 0, "kletochku.bmp"], [0, 0, "kletochku.b
 pl1 = ['player1/player1_1.png', 'player1/player1_2.png', 'player1/player1_3.png', 'player1/player1_4.png',
        'player1/player1_5.png', 'player1/player1_6.png']
 wallet1 = []
+card_player1=[]
 pl2 = ['player2/player2_1.png', 'player2/player2_2.png', 'player2/player2_3.png', 'player2/player2_4.png',
        'player2/player2_5.png', 'player2/player2_6.png']
 wallet2 = []
 list_card = []
+card_player2=[]
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -124,7 +126,9 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * self.pos[0] + (WIDTH / 2 - 455) + 15,
                                                tile_height * self.pos[1] + 105)
 
-
+def generate_player(data):
+    images = [load_img(i) for i in data]
+    return images
 # ---------------------------------------------------------------
 class InfoWindow(pygame.Surface):
     def __init__(self, ):
@@ -318,16 +322,14 @@ class Button:
 # ---------------------------------------------------------------
 class Dice:
     def __init__(self):
-        self.color_light = (170, 170, 170)  # светлый оттенок кнопки
+
         self.surf_dice = pygame.Surface((130, 570))
         self.surf_dice.fill("white")
         screen.blit(self.surf_dice, (WIDTH / 2 - 65, 240))
 
     def play(self):
-
         dice1 = random.randrange(1, 7)  # Значение кости1
         dice2 = random.randrange(1, 7)  # Значение кости2
-
         dice1_path = random.randrange(1, 9)  # Путь кости1
         dice2_path = random.randrange(1, 9)  # Путь кости2
         coords_1 = 570
@@ -338,6 +340,7 @@ class Dice:
         flag1 = False
         flag2 = False
         temp = [0, 0]
+        dice_img=dice_img2=0
 
         for i in range(1, rang):
             self.surf_dice.fill("white")  # Очищаем сурф
@@ -369,7 +372,7 @@ class Dice:
             pygame.display.flip()
             s_catch = pygame.mixer.Sound(f'sound/{random.choice(list_sound)}.ogg')
             s_catch.play()
-            pygame.time.wait(200)
+            pygame.time.wait(100)
             coords_1 -= 65
             coords_2 -= 65
         return dice1 + dice2
@@ -379,7 +382,7 @@ class Dice:
 class Money(pygame.Surface):
     def __init__(self, data, pos_x, pos_y):
         super().__init__((120, 230))
-        print(data, pos_x, pos_y)
+        #print(data, pos_x, pos_y)
         self.nominal = data[0]
         self.quantity = data[1]
         self.image = load_img(f'money/{data[2]}')
@@ -420,7 +423,51 @@ def generate_level():
                               [Tile(load_img(f'{data[0]}/img{enum}.jpg'), *_) for enum, _ in
                                enumerate(eval(data[4]), start=1)]))
 
+# ---------------------------------------------------------------
+class CardPlayer(pygame.Surface):
+    def __init__(self, pos_x, pos_y):
+        super().__init__((70, 140))
+        print( pos_x, pos_y)
+        self.image = load_img("kletochki2.bmp")
+        self.rect = self.image.get_rect(topleft=(pos_x, pos_y))  # получаем ссылку на размеры этой области в виде экземпляра класса Rect
 
+def card_player(x, y, player):
+    tmp = 0
+    for i in range(3):
+        for j in range(7):
+            z = CardPlayer( x, y)
+            z.scroll(x, y)
+            screen.blit(z.image, z.rect)
+            if player == 1:
+                card_player1.append(z)
+            else:
+                card_player2.append(z)
+            tmp += 1
+            x += 70
+        if player == 1:
+            x = WIDTH // 2 - 455-490
+            y += 140
+        else:
+            x = WIDTH // 2 + 455
+            y += 140
+    for i in range(3):
+        for j in range(2):
+            if player == 1:
+                z = CardPlayer(x, y)
+                card_player1.append(z)
+            else:
+                z = CardPlayer(x+350, y)
+                card_player2.append(z)
+            z.scroll(x, y)
+            screen.blit(z.image, z.rect)
+            tmp += 1
+            x += 70
+        if player == 1:
+            x = WIDTH // 2 - 455-490
+            y += 140
+        else:
+            x = WIDTH // 2 + 455
+            y += 140
 # ---------------------------------------------------------------
 def start_screen():
     "Заставка"
@@ -479,10 +526,7 @@ def start_screen():
         clock.tick(FPS)
 
 
-# ---------------------------------------------------------------
-def generate_player(data):
-    images = [load_img(i) for i in data]
-    return images
+
 
 
 # ---------------------------------------------------------------
@@ -501,6 +545,8 @@ but_razmen2 = Button("Размен", (WIDTH / 2 + 65, 810, 125, 60), 25, 18)
 but_oplata2 = Button("Оплатить", (WIDTH / 2 + 190, 810, 125, 60), 7, 18)
 gen_money(WIDTH // 2 - 455 - 328, HEIGHT - 600, 1)
 gen_money(WIDTH // 2 + 455, HEIGHT - 600, 2)
+card_player(WIDTH // 2 - 455-490, 0, 1)
+card_player(WIDTH // 2 + 455, 0, 2)
 dice = Dice()
 info_window = InfoWindow()
 info_window2 = InfoWindow()
@@ -509,6 +555,16 @@ info_window.reader(list_card[0])  #:TODO
 dt = 0
 timer = 0
 running = True
+
+# какая половина активна,
+# до первого клика - никакая
+active_left = True
+active_right = False
+def play(player):
+    pass
+
+
+
 while running:
     mouse = pygame.mouse.get_pos()
     for event in pygame.event.get():  # обращаемся к очереди событий, где event-событие из очереди(итерируемый объект)
@@ -525,27 +581,7 @@ while running:
                     pygame.display.iconify()
                     timer = 0
 
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_UP:
-                _ = dice.play()
 
-                info_window.reader(False)
-                for i in range(_):
-
-                    z = d.popleft()
-                    _index = d[0]
-
-                    # print(list_card[_index].coords[0])
-                    x, y = list_card[_index].coords[0]
-                    player1.move(x, y)
-                    clock.tick(5)
-                    tiles_group.draw(screen)
-                    player_group.update()
-                    player_group.draw(screen)
-                    pygame.display.flip()
-                    d.append(z)
-                    if _ == i + 1:
-                        info_window.reader(list_card[_index])
 
     # Увеличение таймера после того, как мышь нажал первый раз.
     if timer != 0:
@@ -556,12 +592,7 @@ while running:
 
     dt = clock.tick(30) / 1000
 
-    tiles_group.draw(screen)
-    player_group.update()
-    player_group.draw(screen)
-    money_group.draw(screen)
-    screen.blit(info_window, (WIDTH / 2 - 315, 240))
-    screen.blit(info_window2, (WIDTH / 2 + 65, 240))
+
 
     if but.left <= mouse[0] <= but.right and but.up <= mouse[1] <= but.down:  # Кнопка ход
         but.focus()
@@ -592,6 +623,34 @@ while running:
     else:
         but_oplata2.update()
 
+    if active_left:
+        for event in pygame.event.get():  # обращаемся к очереди событий, где event-событие из очереди(итерируемый объект)
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE:
+                    tmp = dice.play()
+                    info_window.reader(False)
+                    for i in range(tmp):
+                        z = d.popleft()
+                        _index = d[0]
+                        # print(list_card[_index].coords[0])
+                        x, y = list_card[_index].coords[0]
+                        player1.move(x, y)
+                        clock.tick(5)
+                        tiles_group.draw(screen)
+                        player_group.update()
+                        player_group.draw(screen)
+                        pygame.display.flip()
+                        d.append(z)
+                        if tmp == i + 1:
+                            info_window.reader(list_card[_index])
+    elif active_right:
+        pass
+    tiles_group.draw(screen)
+    player_group.update()
+    player_group.draw(screen)
+    money_group.draw(screen)
+    screen.blit(info_window, (WIDTH / 2 - 315, 240))
+    screen.blit(info_window2, (WIDTH / 2 + 65, 240))
     clock.tick(FPS)
     pygame.display.flip()
 pygame.quit()

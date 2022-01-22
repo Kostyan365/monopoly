@@ -29,17 +29,16 @@ nominal = [[0, 0, "kletochku.bmp"], [0, 0, "kletochku.bmp"], [0, 0, "kletochku.b
            [1, 5, "img1.bmp"], [5, 1, "img2.bmp"], [10, 2, "img3.bmp"], [20, 1, "img4.bmp"],
            [50, 1, "img5.bmp"], [100, 4, "img6.bmp"], [500, 2, "img7.bmp"], [1000, 0, "img8.bmp"]]
 
-
 # основной персонаж
 pl1 = ['player1/player1_1.png', 'player1/player1_2.png', 'player1/player1_3.png', 'player1/player1_4.png',
        'player1/player1_5.png', 'player1/player1_6.png']
 wallet1 = []
-card_player1=[]
+card_player1 = []
 pl2 = ['player2/player2_1.png', 'player2/player2_2.png', 'player2/player2_3.png', 'player2/player2_4.png',
        'player2/player2_5.png', 'player2/player2_6.png']
 wallet2 = []
 list_card = []
-card_player2=[]
+card_player2 = []
 # группы спрайтов
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -126,9 +125,36 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * self.pos[0] + (WIDTH / 2 - 455) + 15,
                                                tile_height * self.pos[1] + 105)
 
+
 def generate_player(data):
     images = [load_img(i) for i in data]
     return images
+
+
+class Tablo(pygame.Surface):
+    def __init__(self, ):
+        super().__init__((630, 100))
+        self.fon = pygame.transform.scale(load_img('svetlo-krasnii-fon.jpg'), (WIDTH, HEIGHT))
+        self.blit(self.fon, (0, 0))
+
+    def reader(self, message):
+        self.fon = pygame.transform.scale(load_img('svetlo-krasnii-fon.jpg'), (WIDTH, HEIGHT))
+        self.blit(self.fon, (0, 0))
+        pygame.display.update()
+        font = pygame.font.Font('data/font/Akrobat-ExtraBold.otf', 16)
+        text_coord = 5
+        for line in message:
+            string_rendered = font.render(line, True, pygame.Color('white'))
+            intro_rect = string_rendered.get_rect()
+            text_coord += 10
+            intro_rect.top = text_coord
+            intro_rect.x = 10
+            text_coord += intro_rect.height
+            self.blit(string_rendered, intro_rect)
+
+        pygame.display.update()
+
+
 # ---------------------------------------------------------------
 class InfoWindow(pygame.Surface):
     def __init__(self, ):
@@ -340,7 +366,7 @@ class Dice:
         flag1 = False
         flag2 = False
         temp = [0, 0]
-        dice_img=dice_img2=0
+        dice_img = dice_img2 = 0
 
         for i in range(1, rang):
             self.surf_dice.fill("white")  # Очищаем сурф
@@ -375,14 +401,21 @@ class Dice:
             pygame.time.wait(100)
             coords_1 -= 65
             coords_2 -= 65
-        return dice1 + dice2
+        font = pygame.font.Font('data/font/Akrobat-ExtraBold.otf', 30)
+        line = f"    {dice1}         {dice2}"
+        string_rendered = font.render(line, True, pygame.Color('black'))
+        intro_rect = string_rendered.get_rect()
+        self.surf_dice.blit(string_rendered, intro_rect)
+        screen.blit(self.surf_dice, (WIDTH / 2 - 65, 240))
+
+        return [dice1, dice2]
 
 
 # ---------------------------------------------------------------
 class Money(pygame.Surface):
     def __init__(self, data, pos_x, pos_y):
         super().__init__((120, 230))
-        #print(data, pos_x, pos_y)
+        # print(data, pos_x, pos_y)
         self.nominal = data[0]
         self.quantity = data[1]
         self.image = load_img(f'money/{data[2]}')
@@ -423,19 +456,22 @@ def generate_level():
                               [Tile(load_img(f'{data[0]}/img{enum}.jpg'), *_) for enum, _ in
                                enumerate(eval(data[4]), start=1)]))
 
+
 # ---------------------------------------------------------------
 class CardPlayer(pygame.Surface):
     def __init__(self, pos_x, pos_y):
         super().__init__((70, 140))
-        print( pos_x, pos_y)
+        print(pos_x, pos_y)
         self.image = load_img("kletochki2.bmp")
-        self.rect = self.image.get_rect(topleft=(pos_x, pos_y))  # получаем ссылку на размеры этой области в виде экземпляра класса Rect
+        self.rect = self.image.get_rect(
+            topleft=(pos_x, pos_y))  # получаем ссылку на размеры этой области в виде экземпляра класса Rect
+
 
 def card_player(x, y, player):
     tmp = 0
     for i in range(3):
         for j in range(7):
-            z = CardPlayer( x, y)
+            z = CardPlayer(x, y)
             z.scroll(x, y)
             screen.blit(z.image, z.rect)
             if player == 1:
@@ -445,7 +481,7 @@ def card_player(x, y, player):
             tmp += 1
             x += 70
         if player == 1:
-            x = WIDTH // 2 - 455-490
+            x = WIDTH // 2 - 455 - 490
             y += 140
         else:
             x = WIDTH // 2 + 455
@@ -456,18 +492,20 @@ def card_player(x, y, player):
                 z = CardPlayer(x, y)
                 card_player1.append(z)
             else:
-                z = CardPlayer(x+350, y)
+                z = CardPlayer(x + 350, y)
                 card_player2.append(z)
             z.scroll(x, y)
             screen.blit(z.image, z.rect)
             tmp += 1
             x += 70
         if player == 1:
-            x = WIDTH // 2 - 455-490
+            x = WIDTH // 2 - 455 - 490
             y += 140
         else:
             x = WIDTH // 2 + 455
             y += 140
+
+
 # ---------------------------------------------------------------
 def start_screen():
     "Заставка"
@@ -526,9 +564,6 @@ def start_screen():
         clock.tick(FPS)
 
 
-
-
-
 # ---------------------------------------------------------------
 start_screen()  # Заставка
 generate_level()  # Генерируем игровое поле
@@ -545,54 +580,130 @@ but_razmen2 = Button("Размен", (WIDTH / 2 + 65, 810, 125, 60), 25, 18)
 but_oplata2 = Button("Оплатить", (WIDTH / 2 + 190, 810, 125, 60), 7, 18)
 gen_money(WIDTH // 2 - 455 - 328, HEIGHT - 600, 1)
 gen_money(WIDTH // 2 + 455, HEIGHT - 600, 2)
-card_player(WIDTH // 2 - 455-490, 0, 1)
+card_player(WIDTH // 2 - 455 - 490, 0, 1)
 card_player(WIDTH // 2 + 455, 0, 2)
 dice = Dice()
 info_window = InfoWindow()
 info_window2 = InfoWindow()
 info_window.reader(list_card[0])  #:TODO
+tablo = Tablo()
+
+message = [['НОВАЯ ИГРА, разыграем право первого хода', 'игрок слева - пробел, игрок справа - мышь'],
+           ['Игрок слева сделал ход', 'ждем правого игрока'], ['Игрок справа сделал ход', 'ждем левого игрока'],
+           ['Первым ходит игрок слева'], ['Первым ходит игрок справа'],
+           ['Выпало одинаковое количество очков', 'придется перебросить']]
+tablo.reader(message[0])
 
 dt = 0
 timer = 0
 running = True
-
-# какая половина активна,
-# до первого клика - никакая
-active_left = True
+active_left = False
 active_right = False
-def play(player):
-    pass
 
 
+def play():
+    global active_left, active_right
+    while True:
+        mouse = pygame.mouse.get_pos()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                terminate()
 
-while running:
-    mouse = pygame.mouse.get_pos()
-    for event in pygame.event.get():  # обращаемся к очереди событий, где event-событие из очереди(итерируемый объект)
+            if event.type == pygame.KEYDOWN and active_left == False:
+                if event.key == pygame.K_SPACE:
+                    active_left = sum(dice.play())
+                    tablo.reader(message[1])
+
+            if event.type == pygame.MOUSEBUTTONDOWN and active_right == False:
+                if but.left <= mouse[0] <= but.right and but.up <= mouse[1] <= but.down:
+                    active_right = sum(dice.play())
+                    tablo.reader(message[2])
+
+                if but_exit.left <= mouse[0] <= but_exit.right and but_exit.up <= mouse[1] <= but_exit.down:
+                    terminate()  # Если мышь нажала на кнопку игра прекращена
+
+        if active_right and active_left:
+            if active_right > active_left:
+                tablo.reader(message[4])
+                active_left = False
+                active_right = True
+                return
+            elif active_right < active_left:
+                tablo.reader(message[3])
+                active_left = True
+                active_right = False
+                return
+            elif active_right == active_left:
+                tablo.reader(message[5])
+                active_left = False
+                active_right = False
+
+        if but.left <= mouse[0] <= but.right and but.up <= mouse[1] <= but.down:  # Кнопка ход
+            but.focus()
+        else:
+            but.update()
+        if but_exit.left <= mouse[0] <= but_exit.right and but_exit.up <= mouse[1] <= but_exit.down:  # Кнопка выход
+            but_exit.focus()
+        else:
+            but_exit.update()
+        tiles_group.draw(screen)
+        player_group.update()
+        player_group.draw(screen)
+        money_group.draw(screen)
+        screen.blit(info_window, (WIDTH / 2 - 315, 240))
+        screen.blit(info_window2, (WIDTH / 2 + 65, 240))
+        screen.blit(tablo, (WIDTH / 2 - 315, 0))
+        clock.tick(FPS)
+        pygame.display.flip()
+
+
+def move_handler(player):  # Обработчик хода
+    tmp = sum(dice.play())
+    info_window.reader(False)
+    for i in range(tmp):
+        z = d.popleft()
+        _index = d[0]
+        # print(list_card[_index].coords[0])
+        x, y = list_card[_index].coords[0]
+        if player == 1:
+            player1.move(x, y)
+        else:
+            player2.move(x, y)
+        clock.tick(5)
+        tiles_group.draw(screen)
+        player_group.update()
+        player_group.draw(screen)
+        pygame.display.flip()
+        d.append(z)
+        if tmp == i + 1:
+            info_window.reader(list_card[_index])
+
+
+def game(player):
+    global active_left, active_right
+    for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            terminate()
         if event.type == pygame.MOUSEBUTTONDOWN:
             if but_exit.left <= mouse[0] <= but_exit.right and but_exit.up <= mouse[1] <= but_exit.down:
                 terminate()  # Если мышь нажала на кнопку игра прекращена
-            if event.button == 1:
-                if timer == 0:  # First mouse click.
-                    timer = 0.001  # Start the timer.
-                # Нажмите еще раз до 0,5 секунды, чтобы дважды щелкнуть.
-                elif timer < 0.1:
-                    pygame.display.iconify()
-                    timer = 0
+            if (but.left <= mouse[0] <= but.right and but.up <= mouse[1] <= but.down) and (
+                    player == 2):  # Если нажата кнопка ход
+                move_handler(player)
+                active_left = True
+                active_right = False
+
+        if (event.type == pygame.KEYDOWN) and (player == 1):
+            if event.key == pygame.K_SPACE:  # Если нажата кнопка ход
+                move_handler(player)
+                active_left = False
+                active_right = True
 
 
-
-    # Увеличение таймера после того, как мышь нажал первый раз.
-    if timer != 0:
-        timer += dt
-        # Сброс через 0,5 секунды.
-        if timer >= 0.1:
-            timer = 0
-
-    dt = clock.tick(30) / 1000
-
-
+while True:
+    mouse = pygame.mouse.get_pos()
+    if not active_right and not active_left:  # Первый запуск
+        play()
 
     if but.left <= mouse[0] <= but.right and but.up <= mouse[1] <= but.down:  # Кнопка ход
         but.focus()
@@ -624,33 +735,17 @@ while running:
         but_oplata2.update()
 
     if active_left:
-        for event in pygame.event.get():  # обращаемся к очереди событий, где event-событие из очереди(итерируемый объект)
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE:
-                    tmp = dice.play()
-                    info_window.reader(False)
-                    for i in range(tmp):
-                        z = d.popleft()
-                        _index = d[0]
-                        # print(list_card[_index].coords[0])
-                        x, y = list_card[_index].coords[0]
-                        player1.move(x, y)
-                        clock.tick(5)
-                        tiles_group.draw(screen)
-                        player_group.update()
-                        player_group.draw(screen)
-                        pygame.display.flip()
-                        d.append(z)
-                        if tmp == i + 1:
-                            info_window.reader(list_card[_index])
+        game(1)
+
     elif active_right:
-        pass
+        game(2)
+
     tiles_group.draw(screen)
     player_group.update()
     player_group.draw(screen)
     money_group.draw(screen)
     screen.blit(info_window, (WIDTH / 2 - 315, 240))
     screen.blit(info_window2, (WIDTH / 2 + 65, 240))
+    screen.blit(tablo, (WIDTH / 2 - 315, 0))
     clock.tick(FPS)
     pygame.display.flip()
-pygame.quit()
